@@ -2,6 +2,12 @@
 
 Simple Chat with SLM model loaded via Wasm in WebBrowser.
 
+## Run demo
+
+Demo site is available on URL: https://jetsfun.github.io/wllama-slm-chat/
+
+
+
 ## Tiny ~41% smaller than TOON
 
 The shortest structured data format for LLM usage
