@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
             margin: 0;
             background-color: #f4f4f4;
         }
+
         #chatbox {
             flex-grow: 1;
             overflow-y: auto;
@@ -21,6 +23,7 @@
             background-color: #fff;
             margin-bottom: 10px;
         }
+
         .message {
             margin-bottom: 15px;
             padding: 10px 15px;
@@ -28,28 +31,35 @@
             max-width: 80%;
             line-height: 1.4;
         }
+
         .user-message {
             background-color: #dcf8c6;
             align-self: flex-end;
-            margin-left: auto; /* Aligns to the right */
+            margin-left: auto;
+            /* Aligns to the right */
         }
+
         .bot-message {
             background-color: #e0e0e0;
             align-self: flex-start;
-             margin-right: auto; /* Aligns to the left */
+            margin-right: auto;
+            /* Aligns to the left */
         }
+
         .message strong {
             display: block;
             margin-bottom: 5px;
             font-size: 0.9em;
             color: #555;
         }
+
         #input-area {
             display: flex;
             padding: 10px;
             border-top: 1px solid #ccc;
             background-color: #eee;
         }
+
         #userInput {
             flex-grow: 1;
             padding: 10px;
@@ -57,6 +67,7 @@
             border-radius: 5px;
             margin-right: 10px;
         }
+
         #sendButton {
             padding: 10px 20px;
             background-color: #007bff;
@@ -66,40 +77,55 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
+
         #sendButton:disabled {
             background-color: #aaa;
             cursor: not-allowed;
         }
+
         #sendButton:hover:not(:disabled) {
-             background-color: #0056b3;
+            background-color: #0056b3;
         }
+
         #status {
             padding: 5px 10px;
             font-size: 0.9em;
             color: #666;
             text-align: center;
             background-color: #f0f0f0;
-            min-height: 1.2em; /* Reserve space */
+            min-height: 1.2em;
+            /* Reserve space */
         }
-         /* Simple loading spinner */
+
+        /* Simple loading spinner */
         .loader {
-            border: 4px solid #f3f3f3; /* Light grey */
-            border-top: 4px solid #3498db; /* Blue */
+            border: 4px solid #f3f3f3;
+            /* Light grey */
+            border-top: 4px solid #3498db;
+            /* Blue */
             border-radius: 50%;
             width: 20px;
             height: 20px;
             animation: spin 1s linear infinite;
-            display: inline-block; /* Or block/flex depending on layout */
-            margin-left: 10px; /* Example spacing */
+            display: inline-block;
+            /* Or block/flex depending on layout */
+            margin-left: 10px;
+            /* Example spacing */
             vertical-align: middle;
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
+
 <body>
     <div id="status">Initializing...</div>
     <div id="chatbox">
@@ -116,16 +142,16 @@
         // We will now define the paths to the WASM files directly using the CDN
         const WLLAMA_CDN_BASE = 'https://cdn.jsdelivr.net/npm/@wllama/wllama@2.3.1/esm/';
         const CONFIG_PATHS = {
-          'single-thread/wllama.wasm': `${WLLAMA_CDN_BASE}single-thread/wllama.wasm`,
-          'multi-thread/wllama.wasm' : `${WLLAMA_CDN_BASE}multi-thread/wllama.wasm`,
-          // You might need the worker if multi-threading is used, let's include it:
-          'multi-thread/wllama.worker.mjs' : `${WLLAMA_CDN_BASE}multi-thread/wllama.worker.mjs`
+            'single-thread/wllama.wasm': `${WLLAMA_CDN_BASE}single-thread/wllama.wasm`,
+            'multi-thread/wllama.wasm': `${WLLAMA_CDN_BASE}multi-thread/wllama.wasm`,
+            // You might need the worker if multi-threading is used, let's include it:
+            'multi-thread/wllama.worker.mjs': `${WLLAMA_CDN_BASE}multi-thread/wllama.worker.mjs`
         };
 
 
         const MODEL_REPO = 'LiquidAI/LFM2-2.6B-GGUF';
-        const MODEL_FILENAME = 'LFM2-2.6B-Q8_0.gguf'; // ~765MB Q4_K_M quantization
-        
+        const MODEL_FILENAME = 'LFM2-2.6B-Q4_K_M.gguf'; // ~1.5GB Q4_K_M quantization
+
         // --- DOM Elements ---
         const chatbox = document.getElementById('chatbox');
         const userInput = document.getElementById('userInput');
@@ -147,17 +173,17 @@
 
         // Helper to set message content (handles formatting)
         function updateMessageContent(messageDiv, sender, text) {
-             // Basic Markdown-like formatting
+            // Basic Markdown-like formatting
             let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
             formattedText = formattedText.replace(/\n/g, '<br>'); // Handle newlines
 
-             // Prevent potential model output like <end_of_turn> from being rendered raw
-             formattedText = formattedText.replace(/</g, "<").replace(/>/g, ">");
-             // Re-allow specific HTML tags we use
-             formattedText = formattedText.replace(/<strong>/g, '<strong>').replace(/<\/strong>/g, '</strong>');
-             formattedText = formattedText.replace(/<em>/g, '<em>').replace(/<\/em>/g, '</em>');
-             formattedText = formattedText.replace(/<br>/g, '<br>');
+            // Prevent potential model output like <end_of_turn> from being rendered raw
+            formattedText = formattedText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            // Re-allow specific HTML tags we use
+            formattedText = formattedText.replace(/&lt;strong&gt;/g, '<strong>').replace(/&lt;\/strong&gt;/g, '</strong>');
+            formattedText = formattedText.replace(/&lt;em&gt;/g, '<em>').replace(/&lt;\/em&gt;/g, '</em>');
+            formattedText = formattedText.replace(/&lt;br&gt;/g, '<br>');
 
 
             messageDiv.innerHTML = `<strong>${sender === 'user' ? 'You' : 'Bot'}</strong>${formattedText}`;
@@ -199,32 +225,32 @@
                 const progressCallback = ({ loaded, total }) => {
                     const progressPercentage = total > 0 ? Math.round((loaded / total) * 100) : 0;
                     setStatus(`Downloading model... ${progressPercentage}% (${(loaded / 1024 / 1024).toFixed(1)} / ${(total / 1024 / 1024).toFixed(1)} MB)`, true);
-                     console.log(`Model download progress: ${progressPercentage}%`);
+                    console.log(`Model download progress: ${progressPercentage}%`);
                 };
 
                 setStatus('Starting model download (this may take a while)...', true);
-                 console.log(`Loading model: ${MODEL_REPO}/${MODEL_FILENAME}`);
+                console.log(`Loading model: ${MODEL_REPO}/${MODEL_FILENAME}`);
 
                 await wllamaInstance.loadModelFromHF(
                     MODEL_REPO,
                     MODEL_FILENAME,
                     {
                         progressCallback,
-                        n_ctx:  4 * 1024, 
-                        cache_type_k: 'q8_0',
+                        n_ctx: 4 * 1024,
+                        cache_type_k: 'q4_0',
                         n_threads: 4,
                         // Optional: Increase parallel downloads if desired and supported by server/browser
                         // parallelDownloads: 5,
                         // Explicitly allow cross-origin loading for WASM workers if needed
                         // (though fetching from same CDN *should* be fine, sometimes helps)
-                         config: {
-                             assetPath: WLLAMA_CDN_BASE + 'multi-thread/',
-                             n_ctx:  5* 1024, // Context size for the model
-                             cache_type_k: 'q8_0',
-                             n_ctx_per_seq: 4096, // Context size for each sequence
-                             n_threads: 4, // Number of threads to use (adjust based on your CPU)
-                             llama_context:4096, 
-                         }
+                        config: {
+                            assetPath: WLLAMA_CDN_BASE + 'multi-thread/',
+                            n_ctx: 5 * 1024, // Context size for the model
+                            cache_type_k: 'q4_0',
+                            n_ctx_per_seq: 4096, // Context size for each sequence
+                            n_threads: 4, // Number of threads to use (adjust based on your CPU)
+                            llama_context: 4096,
+                        }
                     }
                 );
 
@@ -238,7 +264,7 @@
                 console.error('Initialization or Model Loading Error:', error);
                 // Check for specific errors like Cross-Origin-Isolation problems
                 if (error.message && error.message.includes('SharedArrayBuffer')) {
-                     setStatus(`Error: ${error.message}. Ensure your server sends COOP/COEP headers for multi-threading.`);
+                    setStatus(`Error: ${error.message}. Ensure your server sends COOP/COEP headers for multi-threading.`);
                 } else {
                     setStatus(`Error: ${error.message || 'Failed to initialize or load model.'}`);
                 }
@@ -294,11 +320,11 @@
 
                 // Final Update - outputText should be the final string
                 if (typeof outputText === 'string') {
-                     let cleanedOutput = outputText.replace(/<end_of_turn>/g, '').trim();
+                    let cleanedOutput = outputText.replace(/<end_of_turn>/g, '').trim();
                     updateMessageContent(botMessageDiv, 'bot', cleanedOutput || "(No response generated)");
                 } else {
-                     console.error("Final outputText was not a string:", outputText);
-                     updateMessageContent(botMessageDiv, 'bot', "(Error: Invalid final output format)");
+                    console.error("Final outputText was not a string:", outputText);
+                    updateMessageContent(botMessageDiv, 'bot', "(Error: Invalid final output format)");
                 }
 
 
@@ -327,4 +353,5 @@
 
     </script>
 </body>
+
 </html>
